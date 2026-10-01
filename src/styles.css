@@ -1,0 +1,133 @@
+@import '@tabler/icons-webfont/dist/tabler-icons.min.css';
+
+
+html {
+    box-sizing: border-box;
+    font-size: 62.5%;
+
+}
+
+*,
+*::before,
+*::after {
+    /* font-family: 'poppins-bold' !important; */
+    line-height: 2rem !important;
+    box-sizing: inherit;
+    margin: 0;
+    padding: 0;
+    caret-color: transparent !important;    /*Oculta el cursor de texto, y tambien con F7 para hacerlo desde el navegador */
+}
+
+input {
+    caret-color: auto;
+}
+
+
+
+/*  TEXTO  */
+
+
+
+
+h2 {
+    font-size: 3rem;
+    color: var(--primary);
+    text-align: center;
+    margin: 2rem 0;
+}
+
+h3, h4 {
+    font-family: 'poppins-bold' !important;
+}
+
+p {
+    font-size: 1.5rem;
+}
+
+
+
+/*  UTILIDADES  */
+
+
+
+.container {
+    width: 100%;
+    max-width: 120rem;
+    margin: 0 auto;
+}
+
+
+
+/*  ROOT Y FONT  */
+
+
+
+@font-face {
+    font-family: 'poppins-bold';
+    src: url("app/assets//fonts/poppins-bold.ttf") format('opentype');
+}
+
+@font-face {
+    font-family: 'poppins-regular';
+    src: url("app/assets//fonts/poppins-regular.ttf") format('opentype');
+}
+
+
+:root {
+    --primary: #345269;
+    --primary-dark: #ffffff;
+    --secondary: #527083;
+
+    --background: #011526;
+    --surface: #263C4D;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #505050;
+
+    --accent: #D48046;
+    --accent-dark: #773F2A;
+}
+
+
+
+/*  SWEET ALERT 2  */
+
+
+.swal2-popup {
+    width: 50rem !important;
+    border-radius: 2rem !important;
+    gap: 1rem !important;
+    padding: 4rem !important;
+}
+
+.swal2-icon {
+    transform: scale(1.2);
+    margin: 2rem auto;
+}
+
+
+.swal2-popup h2 {
+    font-size: 2.5rem !important;
+    /* font-family: 'poppins-bold' !important; */
+    color: #FF0A41 !important;
+    color: var(--primary) !important;
+    font-weight: 100 !important;
+    text-transform: uppercase !important;
+}
+
+.swal2-html-container {
+    font-size: 1.6rem !important;
+    color: var(--text-secondary) !important;
+    text-align: center !important;
+}
+
+.swal2-popup button {
+    background-color: var(--primary) !important;
+    background-color: #006aff !important;
+    font-size: 1.6rem !important;
+}
+
+
+.swal2-popup button:nth-last-of-type(1) {
+    background-color: #FF0A41 !important;
+}

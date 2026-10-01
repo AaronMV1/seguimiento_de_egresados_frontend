@@ -1,0 +1,943 @@
+
+
+import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { CapitalizePipe } from '../../shared/pipes/capitalize.pipe';
+import { Strings } from '../../shared/utils/strings';
+import { Alertas } from '../../shared/utils/alertas';
+
+import { Http } from '../../core/services/http';
+
+
+type Popup =
+    | 'TERMINOS'
+
+
+@Component({
+    selector: 'app-encuesta',
+    imports: [ CapitalizePipe, CommonModule, FormsModule ],
+    templateUrl: './encuesta.html',
+    styleUrl: './encuesta.css',
+})
+
+
+export class Encuesta implements OnInit {
+
+
+
+    //  #region     VARIABLES
+
+
+    seccionActual = 1;
+
+
+    readonly totalSecciones = 6;
+    seccionFase: number | null = null;
+    aniosDesdeEgreso: number | null = null;
+    datosEgresadoValidados = false;
+
+
+    consentimiento: string = '';
+    tipoDocumento: string = '';
+    numeroDocumento: string = '';
+    nombresApellidos: string = '';
+    genero: string = '';
+    sede: number | null = null;
+    facultad: number = 0;
+    carrera: number = 0;
+    anioEgreso: string = '';
+    correoElectronico: string = '';
+    numeroCelular: string = '';
+
+    fase1participacion: string = '';
+    fase1situacion: number[] = [];
+    fase1trabajando: string = '';
+    fase1primerempleo: string = '';
+    fase1medios: string = '';
+
+    fase2satisfaccionestudios: string = '';
+    fase2participacion: string = '';
+    fase2satisfaccionservicio: string = '';
+    fase2planificacion: string = '';
+    fase2empresanombre: string = '';
+    fase2empresaempleadornombre: string = '';
+    fase2empresaempleadorcorreo: string = '';
+    fase2empresaempleadornumero: string = '';
+
+    fase3especialidad: string = '';
+    fase3participacion: string = '';
+    fase3educacioncontinua: string = '';
+
+    fase4investigacion: string = '';
+    fase4participacion: number[] = [];
+    fase4resultados: number[] = [];
+    fase4innovacion: string = '';
+    fase4capacitacion: string = '';
+    fase4formacion: string = '';
+
+
+    nombresApellidosLabel: boolean = false;
+    generoLabel: boolean = false;
+    sedeLabel: boolean = false;
+    facultadLabel: boolean = false;
+    carreraLabel: boolean = false;
+    anioEgresoLabel: boolean = false;
+    correoElectronicoLabel: boolean = false;
+    numeroCelularLabel: boolean = false;
+
+
+    //  #endregion  VARIABLES   */
+
+    //  #region     LISTAS
+
+
+    tipoDocumentoOptions: any[] = [];
+    sedeOptions: any[] = [];
+
+
+    generoOptions = [
+        { value: 'M', text: 'Masculino' },
+        { value: 'F', text: 'Femenino' },
+    ];
+
+    facultadOptions = [
+        { value: 1, text: 'Ciencias de la Salud' },
+        { value: 2, text: 'Ingenierías' },
+        { value: 3, text: 'Derecho y Ciencias Empresariales' },
+        // { value: 4, text: 'Comunicación y Ciencias Administrativas' },
+    ];
+
+    carrerasOptions: Record<number, { value: number; text: string }[]> = {
+        1: [
+            { value: 1, text: 'Medicina Humana' },
+            { value: 2, text: 'Enfermería' },
+            { value: 3, text: 'Estomatología' },
+            { value: 4, text: 'Psicología' },
+            { value: 5, text: 'Tecnología Médica en Laboratorio Clínico y Anatomía Patológica' },
+            { value: 6, text: 'Tecnología Médica en Terapia Física y Rehabilitación' },
+            { value: 7, text: 'Medicina Veterinaria y Zootecnia' },
+        ],
+        2: [
+            { value: 8, text: 'Ingeniería de Sistemas' },
+            { value: 9, text: 'Ingeniería Civil' },
+            { value: 10, text: 'Ingeniería Agroindustrial' },
+            { value: 11, text: 'Ingeniería en Enología y Viticultura' },
+        ],
+        3: [
+            { value: 12, text: 'Derecho' },
+            { value: 13, text: 'Contabilidad' },
+            { value: 14, text: 'Administración de Empresas' },
+            { value: 15, text: 'Administración y Negocios Internacionales' },
+            { value: 16, text: 'Administración y Marketing' },
+            { value: 17, text: 'Turismo, Hotelería y Gastronomía' },
+            { value: 18, text: 'Ciencias de la Comunicación' },
+        ],
+    };
+
+    fase1SituacionOptions = [
+        { value: 1, text: 'Buscando trabajo' },
+        { value: 2, text: 'Estudiando otra carrera de pregrado' },
+        { value: 3, text: 'Estudiando un posgrado' },
+        { value: 4, text: 'Responsable del cuidado familiar' },
+        { value: 5, text: 'Desarrollando la tesis' },
+        { value: 6, text: 'Trabajo formal' },
+        { value: 7, text: 'Trabajos informales u ocasionales' },
+        { value: 8, text: 'Comercio, ventas' },
+        { value: 9, text: 'Desarrollando mi emprendimiento' },
+        { value: 10, text: 'Otro' },
+    ];
+
+    fase4ParticipacionOptions = [
+        { value: 1, text: 'Investigador(a) principal o líder del proyecto' },
+        { value: 2, text: 'Integrante del equipo' },
+        { value: 3, text: 'Coordinador(a)' },
+        { value: 4, text: 'Asistente de investigación' },
+        { value: 5, text: 'Consultor(a)' },
+        { value: 6, text: 'Otros' },
+    ];
+
+    fase4ResultadosOptions = [
+        { value: 1, text: 'Publicaciones científicas' },
+        { value: 2, text: 'Presentaciones o ponencias en eventos académicos' },
+        { value: 3, text: 'Libros o capítulos de libro' },
+        { value: 4, text: 'Patentes, registros de software u otros derechos de propiedad intelectual' },
+        { value: 5, text: 'Innovaciones implementadas (productos, servicios o procesos)' },
+        { value: 6, text: 'Financiamiento para proyectos' },
+        { value: 7, text: 'Ninguno de las anteriores' },
+    ];
+
+
+    //  #endregion  LISTAS
+
+
+
+    cambiarCheckboxMultiple (
+        lista: number[],
+        valor: number,
+        event: Event
+    ): void {
+
+        const input = event.target as HTMLInputElement;
+
+        if (input.checked) {
+
+            if (!lista.includes(valor)) {
+                lista.push(valor);
+            }
+
+        } else {
+
+            const indice = lista.indexOf(valor);
+
+            if (indice !== -1) {
+                lista.splice(indice, 1);
+            }
+
+        }
+    }
+
+    get carreraOptionsLista(): { value: number; text: string }[] {
+        return this.carrerasOptions[this.facultad] ?? [];
+    }
+
+    get seccionTitulo(): string {
+
+        const titulos: Record<number, string> = {
+            1: 'Sección 1: Consentimiento Informado',
+            2: 'Sección 2: Información Personal',
+            3: 'Sección 3: Fase 1 - Información',
+            4: 'Sección 4: Fase 2 - Formación',
+            5: 'Sección 5: Fase 3 - Autocapacitación',
+            6: 'Sección 6: Fase 4 - Innovación',
+        };
+
+        return titulos[this.seccionActual] ?? 'Encuesta para Egresado';
+
+    }
+
+
+
+    ngOnInit(): void {
+        this.obtenerSedeLista();
+        this.camposTest();
+        this.obtenerTipoDocumentoLista();
+    }
+
+    constructor( private _http: Http, private readonly cdr: ChangeDetectorRef ) { }
+
+
+
+    //  #region     SERVICIOS
+
+
+    validarDatoEgresado() {
+
+        this.tipoDocumento = this.tipoDocumento.trim();
+        this.numeroDocumento = this.numeroDocumento.trim();
+
+        if (!this.tipoDocumento || !this.numeroDocumento) {
+
+            Alertas.advertencia(
+                'Campos incompletos',
+                'Por favor, complete todos los campos requeridos.',
+            );
+
+            return;
+
+        }
+
+        if (!navigator.onLine) {
+
+            Alertas.sinConexion();
+
+            return;
+
+        }
+
+        this.datosEgresadoValidados = false;
+
+        this._http.getUPSJBIntegracionesEgresado( { tipo: this.tipoDocumento, documento: this.numeroDocumento }, 'obtenerDato').subscribe({
+
+            next: (res) => {
+
+                // res.reverse();
+
+                const egresado = [...(res ?? [])].sort((a, b) => {
+                    const [anioA, cicloA] = a.descr_egreso.split('-').map(Number);
+                    const [anioB, cicloB] = b.descr_egreso.split('-').map(Number);
+                    return anioA - anioB || cicloA - cicloB;
+                })[0];
+
+                this.cdr.detectChanges();
+
+                if (!egresado?.nombre_completo && !egresado?.descr_egreso) {
+
+                    Alertas.error(
+                        'Datos no encontrados',
+                        'No se encontraron datos del egresado.\nPor favor, verifique la información e inténtelo nuevamente.',
+                        'Aceptar',
+                    );
+
+                    return;
+
+                }
+
+                this.cdr.detectChanges();
+
+                this.verificarEncuestaYaCompletada(egresado);
+
+            },
+
+            error: (err) => {
+                Alertas.porErrorHttp(err, 'Ocurrió un error al validar los datos del egresado. Por favor, inténtelo nuevamente más tarde.');
+            },
+
+        });
+
+    }
+
+    //  Consulta si el egresado (según DNI y año actual) ya completó la encuesta antes de habilitar el formulario.
+    //  Los datos del egresado solo se asignan al formulario si la encuesta aún no fue completada.
+    private verificarEncuestaYaCompletada(egresado: any): void {
+
+        this._http.get(`verificar-encuesta?tipoDocumento=${this.tipoDocumento}&numeroDocumento=${this.numeroDocumento}`).subscribe({
+
+            next: (res) => {
+
+                if (String(res?.estado) === '409') {
+
+                    Alertas.advertencia(
+                        'Encuesta ya registrada',
+                        res?.mensaje ?? 'Ya completó la encuesta de seguimiento correspondiente a este año.',
+                    );
+
+                    return;
+
+                }
+
+                this.nombresApellidos = Strings.capitalize(egresado.nombre_completo).trim();
+                this.anioEgreso = this.obtenerAnioEgreso(egresado.descr_egreso);
+                this.seccionFase = this.calcularSeccionSegunAnioEgreso();
+
+                if (!this.seccionFase) {
+
+                    Alertas.error(
+                        'Datos no encontrados',
+                        'No se pudo determinar la fase del egresado.\nPor favor, verifique el año de egreso e inténtelo nuevamente.',
+                        'Aceptar',
+                    );
+
+                    this.nombresApellidos = '';
+                    this.anioEgreso = '';
+
+                    return;
+
+                }
+
+                this.datosEgresadoValidados = true;
+
+                this.cdr.detectChanges();
+
+            },
+
+            error: (err) => {
+                Alertas.porErrorHttp(err, 'Ocurrió un error al verificar el estado de la encuesta. Por favor, inténtelo nuevamente más tarde.');
+            },
+
+        });
+
+    }
+
+
+    enviarEncuesta(): void {
+
+
+        let test = false;
+
+
+        if (!this.validarInformacionPersonal()) {
+            return;
+        }
+
+        if (!this.validarFaseActual()) {
+
+            Alertas.advertencia(
+                'Respuestas incompletas',
+                'Debe responder todas las preguntas obligatorias antes de enviar la encuesta.',
+            );
+
+            return;
+        }
+
+        if (!navigator.onLine) {
+
+            Alertas.sinConexion();
+
+            return;
+
+        }
+
+
+        let req;
+
+
+        test ?
+
+            req = {
+
+                tipoDocumento: '1',
+                numeroDocumento: '00000000',
+                nombresApellidos: 'Egresado de prueba',
+                genero: 'Masculino',
+                sede: 1,
+                facultad: 3,
+                carrera: 12,
+                anioEgreso: '2024',
+                correoElectronico: 'egresado.prueba@example.invalid',
+                numeroCelular: '900000000',
+
+                fase: this.obtenerFaseActual(),
+
+                fase1participacion: "1",
+                fase1situacion: "1",
+                fase1trabajando: "1",
+                fase1primerempleo: "1",
+                fase1medios: "1",
+
+                fase2satisfaccionestudios: "si",
+                fase2participacion: "2",
+                fase2satisfaccionservicio: "si",
+                fase2planificacion: "2",
+                fase2empresanombre: "2",
+                fase2empresaempleadornombre: "2",
+                fase2empresaempleadorcorreo: "2",
+                fase2empresaempleadornumero: "2",
+
+                fase3especialidad: "3",
+                fase3participacion: "3",
+                fase3educacioncontinua: "3",
+
+                fase4investigacion: "4",
+                fase4participacion: "4",
+                fase4resultados: "4",
+                fase4innovacion: "4",
+                fase4capacitacion: "4",
+                fase4formacion: "4"
+
+            }
+
+        :
+
+            req = {
+
+                tipoDocumento: this.tipoDocumento.trim(),
+                numeroDocumento: this.numeroDocumento.trim(),
+                nombresApellidos: this.nombresApellidos.trim(),
+                genero: this.genero,
+                sede: this.sede,
+
+                facultad: this.facultad,
+                carrera: this.carrera,
+                anioEgreso: this.anioEgreso,
+                correoElectronico: this.correoElectronico.trim(),
+                numeroCelular: this.numeroCelular.replace(/\s+/g, ''),
+
+                fase: this.obtenerFaseActual(),
+
+                fase1participacion: this.fase1participacion,
+                fase1situacion: this.fase1situacion.join(','),
+                fase1trabajando: this.fase1trabajando,
+                fase1primerempleo: this.fase1primerempleo,
+                fase1medios: this.fase1medios,
+
+                fase2satisfaccionestudios: this.fase2satisfaccionestudios,
+                fase2participacion: this.fase2participacion,
+                fase2satisfaccionservicio: this.fase2satisfaccionservicio,
+                fase2planificacion: this.fase2planificacion,
+                fase2empresanombre: this.fase2empresanombre.trim(),
+                fase2empresaempleadornombre: this.fase2empresaempleadornombre.trim(),
+                fase2empresaempleadorcorreo: this.fase2empresaempleadorcorreo.trim(),
+                fase2empresaempleadornumero: this.fase2empresaempleadornumero.replace(/\s+/g, ''),
+
+                fase3especialidad: this.fase3especialidad,
+                fase3participacion: this.fase3participacion,
+                fase3educacioncontinua: this.fase3educacioncontinua,
+
+                fase4investigacion: this.fase4investigacion,
+                fase4participacion: this.fase4participacion.join(','),
+                fase4resultados: this.fase4resultados.join(','),
+                fase4innovacion: this.fase4innovacion,
+                fase4capacitacion: this.fase4capacitacion,
+                fase4formacion: this.fase4formacion
+            }
+
+
+
+        this._http.post(req, 'enviar-encuesta').subscribe({
+
+                next: () => {
+
+                    this.limpiarFormulario();
+                    this.cdr.detectChanges();
+
+                    Alertas.exito(
+                        '¡Encuesta enviada!',
+                        'Gracias por completar la encuesta. Sus respuestas fueron registradas correctamente.',
+                    );
+
+                },
+
+                error: (err) => {
+
+                    console.error(
+                        'Error al enviar la encuesta:',
+                        err
+                    );
+
+                    Alertas.porErrorHttp(err, 'Ocurrió un error al registrar la encuesta. Inténtelo nuevamente.');
+
+                }
+
+        });
+
+    }
+
+    obtenerSedeLista(): void {
+
+        this._http.get('consultar-sede').subscribe({
+
+            next: (res) => {
+
+                this.sedeOptions = res.lista;
+                this.cdr.detectChanges();
+
+            },
+
+            error: (err) => {
+                Alertas.porErrorHttp(err, 'No se pudo cargar la lista de sedes. Inténtelo nuevamente más tarde.');
+            },
+
+        });
+
+    }
+
+    obtenerTipoDocumentoLista(): void {
+
+        this._http.getUPSJBIntegracionesAdmision('parametro/tipoDocumento').subscribe({
+
+            next: (res) => {
+
+                this.tipoDocumentoOptions = res.listaParametro;
+                this.cdr.detectChanges();
+
+            },
+
+            error: (err) => {
+                Alertas.porErrorHttp(err, 'No se pudo cargar la lista de tipos de documento. Inténtelo nuevamente más tarde.');
+            },
+
+        });
+
+    }
+
+
+    //  #endregion  SERVICIOS   */
+
+    //  #region     FUNCIONES
+
+
+    private validarInformacionPersonal(): boolean {
+
+        this.nombresApellidos = this.nombresApellidos.trim();
+        this.correoElectronico = this.correoElectronico.trim();
+        this.numeroCelular = this.numeroCelular.replace(/\s+/g, '');
+        this.nombresApellidosLabel = this.esTextoVacio(this.nombresApellidos);
+        this.generoLabel = this.esTextoVacio(this.genero) || this.genero == '0';
+        this.sedeLabel = this.sede === null || this.sede <= 0;
+        this.facultadLabel = this.esTextoVacio(this.facultad) || this.facultad == 0;
+        this.carreraLabel = this.esTextoVacio(this.carrera) || this.carrera == 0;
+        this.anioEgresoLabel = !this.esAnioEgresoValido(this.anioEgreso);
+        this.correoElectronicoLabel = !this.esCorreoValido(this.correoElectronico);
+        this.numeroCelularLabel = !this.esCelularValido(this.numeroCelular);
+
+        const hayCamposInvalidos =
+            this.nombresApellidosLabel ||
+            this.generoLabel ||
+            this.sedeLabel ||
+            this.facultadLabel ||
+            this.carreraLabel ||
+            this.anioEgresoLabel ||
+            this.correoElectronicoLabel ||
+            this.numeroCelularLabel;
+
+        if (!this.datosEgresadoValidados) {
+
+            Alertas.advertencia(
+                'Validación pendiente',
+                'Debe validar los datos del egresado antes de continuar.',
+            );
+
+            return false;
+        }
+
+        if (hayCamposInvalidos) {
+
+            Alertas.advertencia(
+                'Información incompleta',
+                'Revise los campos marcados antes de continuar.',
+            );
+
+            return false;
+        }
+
+        return true;
+
+    }
+
+    private calcularSeccionSegunAnioEgreso(): number | null {
+
+        const anio = Number(this.anioEgreso);
+        const anioActual = new Date().getFullYear();
+
+        if (
+            !Number.isInteger(anio) ||
+            anio < 1900 ||
+            anio > anioActual
+        ) {
+            return null;
+        }
+
+        const aniosTranscurridos = anioActual - anio;
+
+        this.aniosDesdeEgreso = aniosTranscurridos;
+
+        if (aniosTranscurridos <= 3) {
+            return 3;
+        }
+
+        if (aniosTranscurridos <= 5) {
+            return 4;
+        }
+
+        if (aniosTranscurridos <= 7) {
+            return 5;
+        }
+
+        return 6;
+    }
+
+    private obtenerAnioEgreso(valor: unknown): string {
+
+        const texto = String(valor ?? '').trim();
+        const coincidencia = texto.match(/\d{4}/);
+        return coincidencia?.[0] ?? '';
+
+    }
+
+    private obtenerFaseActual(): number | null {
+
+        if (this.seccionFase === null) {
+            return null;
+        }
+
+        return this.seccionFase - 2;
+
+    }
+
+
+    //  #endregion  FUNCIONES  */
+
+    //  #region     NAVEGACIÓN ENTRE SECCIONES
+
+
+    goToSection(section: number): void {
+
+        if (!this.canNavigateTo(section)) {
+            return;
+        }
+
+        if (section < 1 || section > this.totalSecciones) {
+            return;
+        }
+
+        this.seccionActual = section;
+
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth',
+        });
+    }
+
+    nextSection(): void {
+
+        if (this.seccionActual === 1) {
+            this.goToSection(2);
+            return;
+        }
+
+        if (this.seccionActual === 2) {
+
+            if (!this.validarInformacionPersonal()) {
+                return;
+            }
+
+            if (!this.seccionFase) {
+                alert('Primero debe validar los datos del egresado.');
+                return;
+            }
+
+            this.goToSection(this.seccionFase);
+            return;
+        }
+
+        //  Validar Formulario
+
+    }
+
+    previousSection(): void {
+
+        if (this.seccionActual >= 3) {
+            this.goToSection(2);
+            return;
+        }
+
+        if (this.seccionActual > 1) {
+            this.goToSection(this.seccionActual - 1);
+        }
+
+    }
+
+    private canNavigateTo(targetSection: number): boolean {
+
+        const isMovingForward = targetSection > this.seccionActual;
+
+        if (
+            this.seccionActual === 1 &&
+            isMovingForward &&
+            this.consentimiento !== 'si'
+        ) {
+
+            Alertas.advertencia(
+                'Consentimiento requerido',
+                'Para continuar con la encuesta, debe aceptar el consentimiento informado.',
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+
+    //  #endregion  NAVEGACIÓN ENTRE SECCIONES
+
+    //  #region     UTILIDADES
+
+
+    camposTest(): void {
+        // this.tipoDocumento = '01';
+        this.genero = '0';
+        this.sede = 0;
+        // this.facultad = 0;
+        // this.carrera = 0;
+    }
+
+    limpiarFormulario(): void {
+
+        this.consentimiento = '';
+        this.tipoDocumento = '';
+        this.numeroDocumento = '';
+        this.nombresApellidos = '';
+        this.genero = '0';
+        this.sede = 0;
+        this.facultad = 0;
+        this.carrera = 0;
+        this.anioEgreso = '';
+        this.correoElectronico = '';
+        this.numeroCelular = '';
+
+        this.fase1participacion = '';
+        this.fase1situacion = [];
+        this.fase1trabajando = '';
+        this.fase1primerempleo = '';
+        this.fase1medios = '';
+
+        this.fase2satisfaccionestudios = '';
+        this.fase2participacion = '';
+        this.fase2satisfaccionservicio = '';
+        this.fase2planificacion = '';
+        this.fase2empresanombre = '';
+        this.fase2empresaempleadornombre = '';
+        this.fase2empresaempleadorcorreo = '';
+        this.fase2empresaempleadornumero = '';
+
+        this.fase3especialidad = '';
+        this.fase3participacion = '';
+        this.fase3educacioncontinua = '';
+
+
+        this.fase4investigacion = '';
+        this.fase4participacion = [];
+        this.fase4resultados = [];
+        this.fase4innovacion = '';
+        this.fase4capacitacion = '';
+        this.fase4formacion = '';
+
+        this.seccionActual = 1;
+        this.seccionFase = null;
+        this.aniosDesdeEgreso = null;
+        this.datosEgresadoValidados = false;
+
+    }
+
+    onFacultadChange(): void {
+        this.carrera = 0;
+    }
+
+    cambioDNI(): void {
+        this.nombresApellidos = '';
+        this.anioEgreso = '';
+        this.seccionFase = null;
+        this.aniosDesdeEgreso = null;
+        this.datosEgresadoValidados = false;
+        this.cdr.detectChanges();
+    }
+
+    cambioFase4Investigacion(): void {
+
+        if (this.fase4investigacion === 'No') {
+            this.fase4participacion = [];
+            this.fase4resultados = [];
+            this.fase4innovacion = '';
+            this.fase4capacitacion = '';
+            this.fase4formacion = '';
+        }
+
+    }
+
+
+    //  #endregion  UTILIDADES   */
+
+    //  #region     VALIDACIONES
+
+
+
+    private validarFaseActual(): boolean {
+
+    if (this.seccionFase === 3) {
+
+        const valido =
+            !this.esTextoVacio(this.fase1participacion) &&
+            !this.esTextoVacio(this.fase1situacion) &&
+            !this.esTextoVacio( this.fase1trabajando) &&
+            !this.esTextoVacio(this.fase1primerempleo) &&
+            !this.esTextoVacio(this.fase1medios);
+
+        return valido;
+
+    }
+
+    if (this.seccionFase === 4) {
+
+        const preguntasPrincipalesValidas =
+            !this.esTextoVacio(this.fase2satisfaccionestudios) &&
+            !this.esTextoVacio(this.fase2participacion) &&
+            !this.esTextoVacio(this.fase2satisfaccionservicio) &&
+            !this.esTextoVacio(this.fase2planificacion);
+
+        const correoJefeValido =
+            this.esTextoVacio(this.fase2empresaempleadorcorreo) ||
+            this.esCorreoValido(this.fase2empresaempleadorcorreo);
+
+        const telefonoJefeValido =
+            this.esTextoVacio(this.fase2empresaempleadornumero) ||
+            this.esCelularValido(this.fase2empresaempleadornumero);
+
+        return (
+            preguntasPrincipalesValidas &&
+            correoJefeValido &&
+            telefonoJefeValido
+        );
+
+    }
+
+    if (this.seccionFase === 5) {
+
+        return (
+            !this.esTextoVacio(this.fase3especialidad) &&
+            !this.esTextoVacio(this.fase3participacion) &&
+            !this.esTextoVacio(this.fase3educacioncontinua)
+        );
+
+    }
+
+    if (this.seccionFase === 6) {
+
+
+        if (this.fase4investigacion === 'No') {
+            return true;
+        }
+
+        // Si respondió "Sí", validar el resto
+        return (
+            this.fase4participacion.length > 0 &&
+            this.fase4resultados.length > 0 &&
+            !this.esTextoVacio(this.fase4innovacion) &&
+            !this.esTextoVacio(this.fase4capacitacion) &&
+            !this.esTextoVacio(this.fase4formacion)
+        );
+
+    }
+
+    return false;
+    }
+
+    private esTextoVacio(valor: unknown): boolean {
+        return String(valor ?? '').trim().length === 0;
+    }
+
+    private esCorreoValido(correo: string): boolean {
+        const valor = correo.trim();
+
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(valor);
+    }
+
+    private esCelularValido(celular: string): boolean {
+        const valor = celular.replace(/\s+/g, '');
+
+        return /^9\d{8}$/.test(valor);
+    }
+
+    private esAnioEgresoValido(anioEgreso: string): boolean {
+        const anio = Number(anioEgreso);
+        const anioActual = new Date().getFullYear();
+
+        return (
+            Number.isInteger(anio) &&
+            anio >= 1900 &&
+            anio <= anioActual
+        );
+    }
+
+
+    //  #endregion  VALIDACIONES   */
+
+    //  #region     POPUP
+
+
+    popup = false;
+    popupTipo = '';
+
+
+    functionPOPUP(activo: boolean, tipo: string): void {
+        this.popup = activo;
+        this.popupTipo = activo ? tipo : '';
+    }
+
+
+    //  #endregion  POPUP  */
+
+
+}
+
